@@ -1,0 +1,24 @@
+/* Header */
+
+#header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    max-width: 1120px;
+    min-height: 68px;
+    padding: 16px;
+    margin: 0 auto;
+    justify-content: flex-start;
+}
+
+#header_logo {
+    width: 128px;
+    height: 128px;
+    background-image: url(../assets/tonco-tools.webp);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    margin-right: 8px;
+    flex-shrink: 0;
+}

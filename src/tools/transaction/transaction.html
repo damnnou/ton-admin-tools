@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid Graph Generator</title>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script> -->
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #graph-container {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            min-height: 200px;
+            overflow-x: auto;
+        }
+        textarea {
+            width: 100%;
+            height: 500px;
+            margin-bottom: 10px;
+        }
+        input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <!-- Badge -->
+        <a href="https://tonco.io/">
+            <div id="header_logo"></div>
+        </a>
+        <div id="header_title">TONCO Tools</div>    
+        <div id="header_grow"></div>    
+        <!-- TON Connect Button -->
+        <!-- <div id="tonConnectButton"></div> -->
+    </div>
+    <h1>Mermaid Graph Generator</h1>
+    <div>
+        <label for="transaction-input-label">Enter transaction id:</label>
+    </div>
+    <div>    
+        <input type="text"     id="transaction-input" value="077c6adc4dc57fe9287cc3f16a2473b34b0d1203c1734bb3a41363049ff42719"></input>
+        <input type="checkbox" id="testnet-input"></input>
+    </div>
+    <button id="download-and-parse-button">Download & Parse</button>
+    <div>
+        <label for="mermaid-input">Enter Mermaid Code:</label>
+    </div>
+    <textarea id="mermaid-input" placeholder="graph TD\nA-->B\nA-->C\nB-->D\nC-->D">
+graph TD
+A-->B
+A-->C
+    </textarea>
+    <button id="generate-button">Generate Graph</button>
+    <div id="graph-container"></div>
+    <script src="bundle.js"></script>
+</body>
+</html>
