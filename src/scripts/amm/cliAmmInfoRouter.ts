@@ -1,22 +1,20 @@
-import colors from "colors/safe"
-import { OptionValues } from "commander"
-import { getUserAndClient } from "../utils"
 import { Address, Cell, fromNano, Slice, TonClient4 } from "@ton/ton"
-import { AddressBook } from "../addressbook"
 import { RouterV3Contract, routerv3ContractCellToConfig } from "../../wrappers/RouterV3Contract"
 import { getDailyStorageFees } from "../../wrappers/tonUtils"
+import { getUserAndClient } from "../utils";
+import { AddressBook } from "../addressbook";
 
-export async function ammInfoRouter(options : OptionValues) {
-    console.log(options)   
+export async function ammInfoRouter(options : { [key: string]: any; }, logger : any) {
+    logger.log(options)
 
-    const {key, wallet:walletV4, client: clientAPI, name:credentialsName} = await getUserAndClient()
+    const {client: clientAPI, name:credentialsName} = await getUserAndClient()
     let client = clientAPI as TonClient4
 
     const addressBook = AddressBook.getInstance(options.deploy != "" ? options.deploy : credentialsName)
     addressBook.printAddressBook()
 
     let routerAddress  = addressBook.getAddress(options.router, Address.parse(addressBook.router))
-    console.log(`Router        : ${routerAddress.toString()}`)
+    logger.log(`Router        : ${routerAddress.toString()}`)
     const routerV3Contract =  client.open(new RouterV3Contract(routerAddress))
     /* Let's assume it is deployed */
 
@@ -27,9 +25,9 @@ export async function ammInfoRouter(options : OptionValues) {
     let routerBalance = poolAccount.account.balance.coins
     let storageDayFee = getDailyStorageFees (BigInt(sStats!.used.bits), BigInt(sStats!.used.cells))
 
-    console.log("Blockchain Data:")        
-    console.log(`  Balance      : ${fromNano(routerBalance)} ton`)
-    console.log(`  Data used    : ${sStats!.used.bits} bits ${sStats?.used.cells} cells (days remaining = ${BigInt(routerBalance) / storageDayFee}, per day = ${fromNano(storageDayFee)})`)
+    logger.log("Blockchain Data:")        
+    logger.log(`  Balance      : ${fromNano(routerBalance)} ton`)
+    logger.log(`  Data used    : ${sStats!.used.bits} bits ${sStats?.used.cells} cells (days remaining = ${BigInt(routerBalance) / storageDayFee}, per day = ${fromNano(storageDayFee)})`)
 
     let state = await routerV3Contract.getState()
     let adminAddress = state.admin
@@ -38,27 +36,21 @@ export async function ammInfoRouter(options : OptionValues) {
     let flags = state.flags
     let rseqno = state.pool_seqno
        
-    console.log(`ROUTER ${routerAddress} `)
+    logger.log(`ROUTER ${routerAddress} `)
     
-    /* Temporary hack */
-    //let routerState = await routerV3Contract.getState()
-    /*let adminAddress 
-    let poolFactoryAddress
-    let flags : bigint = 0n*/
-
-    console.log(`  Admin       : ${colors.magenta(adminAddress.toString())}`)
-    console.log(`  PoolAdmin   : ${colors.magenta(poolAdminAddress.toString())}`)    
-    console.log(`  PoolFactory : ${colors.magenta(poolFactoryAddress.toString())}`)
-    console.log(`  Flags : ${"0x" + flags.toString(16).padStart(16, "0")}`)
-    console.log(`  Seqno : ${rseqno}`)
+    logger.log(`  Admin       : ${logger.magenta(adminAddress.toString())}`)
+    logger.log(`  PoolAdmin   : ${logger.magenta(poolAdminAddress.toString())}`)    
+    logger.log(`  PoolFactory : ${logger.magenta(poolFactoryAddress.toString())}`)
+    logger.log(`  Flags : ${"0x" + flags.toString(16).padStart(16, "0")}`)
+    logger.log(`  Seqno : ${rseqno}`)
 
     let codes = await routerV3Contract.getChildContracts();
-    console.log(   `Pool     Code Hash:`, "0x" + codes.poolCode       .hash(0).toString("hex"))
-    console.log(   `Account  Code Hash:`, "0x" + codes.accountCode    .hash(0).toString("hex"))
-    console.log(   `Position Code Hash:`, "0x" + codes.positionNFTCode.hash(0).toString("hex"))
+    logger.log(   `Pool     Code Hash:`, "0x" + codes.poolCode       .hash(0).toString("hex"))
+    logger.log(   `Account  Code Hash:`, "0x" + codes.accountCode    .hash(0).toString("hex"))
+    logger.log(   `Position Code Hash:`, "0x" + codes.positionNFTCode.hash(0).toString("hex"))
 
 
-    console.log(`Direct from contract:`)
+    logger.log(`Direct from contract:`)
     seqno = (await client.getLastBlock()).last.seqno
     const routerAccount = await client.getAccount(seqno, routerAddress)
     if (routerAccount.account.state.type == "active") {
@@ -69,7 +61,7 @@ export async function ammInfoRouter(options : OptionValues) {
         const code : Cell = Cell.fromBase64(codeString)
         
         const dataUnpacked = routerv3ContractCellToConfig(data)
-        console.log(` Code Hash  : 0x${code.hash(0).toString("hex")}` )
+        logger.log(` Code Hash  : 0x${code.hash(0).toString("hex")}` )
 
         
         let s : Slice = data.beginParse()
@@ -81,17 +73,17 @@ export async function ammInfoRouter(options : OptionValues) {
         const flagsLock = timelocks.loadMaybeRef()
         
         const nowTime = Math.floor(Date.now() / 1000)
-        console.log(` Timelock delay : ${dataUnpacked.timelockDelay}` )
-        console.log(` Now      : ${nowTime}` )
+        logger.log(` Timelock delay : ${dataUnpacked.timelockDelay}` )
+        logger.log(` Now      : ${nowTime}` )
       
         if (adminLock) {
             const admin = adminLock.beginParse()
             const newAdmin = admin.loadAddressAny()
             const time = admin.loadUintBig(64)
             const timeDelta = time > nowTime
-            console.log(` Admin   : ${newAdmin} till ${timeDelta ? colors.red(timeDelta.toString() + "left " + timeDelta + "s") :  colors.green(time.toString())}`)
+            logger.log(` Admin   : ${newAdmin} till ${timeDelta ? logger.red(timeDelta.toString() + "left " + timeDelta + "s") :  logger.green(time.toString())}`)
         } else {
-            console.log(` Admin   : No lock`)
+            logger.log(` Admin   : No lock`)
         }
 
         if (codeLock) {
@@ -99,9 +91,9 @@ export async function ammInfoRouter(options : OptionValues) {
             const time = code.loadUintBig(64)
             const newCode = code.loadRef()
             const timeDelta = time > nowTime
-            console.log(` Code    : Has Lock ${newCode.hash(0).toString("hex")} till ${timeDelta ? colors.red(timeDelta.toString() + "left " + timeDelta + "s") :  colors.green(time.toString())} `)
+            logger.log(` Code    : Has Lock ${newCode.hash(0).toString("hex")} till ${timeDelta ? logger.red(timeDelta.toString() + "left " + timeDelta + "s") :  logger.green(time.toString())} `)
         } else {
-            console.log(` Code    : No lock`)
+            logger.log(` Code    : No lock`)
         }
 
         if (flagsLock) {
@@ -110,9 +102,9 @@ export async function ammInfoRouter(options : OptionValues) {
             const time = flags.loadUintBig(64)
             const timeDelta = time > nowTime
 
-            console.log(` Flags   : Has Lock ${value} till ${timeDelta ? colors.red(timeDelta.toString() + "left " + timeDelta + "s") :  colors.green(time.toString())} `)
+            logger.log(` Flags   : Has Lock ${value} till ${timeDelta ? logger.red(timeDelta.toString() + "left " + timeDelta + "s") :  logger.green(time.toString())} `)
         } else {
-            console.log(` Flags   : No lock`)
+            logger.log(` Flags   : No lock`)
         }
        
     }

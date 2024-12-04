@@ -2,8 +2,6 @@ import { Cell, fromNano, Transaction } from "@ton/core"
 import { ContractOpcodes, ErrorsLookup, OpcodesLookup } from "../wrappers/opCodes"
 import { FEE_DENOMINATOR, getApproxFloatPrice, MaxUint128, TickMath } from "../wrappers/frontmath/frontMath"
 
-import * as fs from 'fs';
-//import { ContractMessageMeta, DummyCell } from "../wrappers/DummyCell";
 import { RouterV3Contract } from "../wrappers/RouterV3Contract";
 import { PoolV3Contract } from "../wrappers/PoolV3Contract";
 import { PositionNFTV3Contract } from "../wrappers/PositionNFTV3Contract";
@@ -11,7 +9,7 @@ import { AccountV3Contract } from "../wrappers/AccountV3Contract";
 import { ParseDataVisitor } from "./meta/parseDataVisitor";
 import { ContractMessageMeta } from "./meta/structureVisitor";
 import { JettonWallet } from "../wrappers/common/JettonWallet";
-
+import { PTonWalletV2 } from "../wrappers/3rd_party/PTonWalletV2";
 
 function printParsedInput(obj : any , body: Cell) : ContractMessageMeta[] {
 
@@ -51,6 +49,11 @@ export class UniversalParser
         }
         try {        
             result = JettonWallet.printParsedInput(body)
+            if (result.length != 0)
+                return result    
+        } catch {}
+        try {        
+            result = PTonWalletV2.printParsedInput(body)
             if (result.length != 0)
                 return result    
         } catch {}

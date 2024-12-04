@@ -1,7 +1,9 @@
 import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Dictionary, ExternalAddress, Sender, SendMode, Slice } from '@ton/core';
-import { beginMessage } from './abcJettonMinter';
-import { JettonWalletContractBase } from './abcJettonWallet';
-import { ContractOpcodes, OpcodesLookup } from '../opCodes';
+import { JettonWalletContractBase } from '../common/abcJettonWallet';
+import { beginMessage } from '../common/abcJettonMinter';
+import { ContractMessageMeta } from '../../scripts/meta/structureVisitor';
+import { ContractOpcodes } from '../opCodes';
+
 
 export type WalletConfig = {
     balance: bigint,
@@ -123,7 +125,6 @@ export class PTonWalletV2 extends JettonWalletContractBase<typeof proxyWalletOpc
     static printParsedInput(body: Cell) : ContractMessageMeta[] {
         let result : ContractMessageMeta[] = []
   
-        const OpLookup : {[key : number] : string} = OpcodesLookup
         let p = body.beginParse()        
         let op : number  = p.preloadUint(32)
         
