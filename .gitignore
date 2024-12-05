@@ -1,6 +1,7 @@
 **/build/*.fif
 **/build/*.cell
-**/node_modules
+node_modules/
+dist/
 **/.env*
 !.env.example
 **/.wget-hsts
