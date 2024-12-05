@@ -1,5 +1,5 @@
 import { Address, beginCell, Builder, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode, toNano } from '@ton/core';
-import { beginMessage, JettonMinterContractBase } from './abcJettonMinter';
+import { beginMessage, JettonMinterContractBase } from '../common/abcJettonMinter';
 
 export const jMinterOpcodes = {
     burnNotification: 0x7bdd97de,

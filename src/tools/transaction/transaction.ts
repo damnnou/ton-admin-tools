@@ -3,10 +3,13 @@ import { Api, HttpClient, Trace } from "tonapi-sdk-js";
 import { flattenTrace } from "../../scripts/tonapiTotoncore";
 import { ContractDictionary, traceToMermaid, UniversalParser } from "../../scripts/traceToMermaid";
 import mermaid from 'mermaid';
+import { loadSharedParts } from "../common/common";
 
 
 // Import Mermaid for initialization and rendering
 //declare var mermaid: any;
+
+loadSharedParts();
 
 const traceInputElement = document.getElementById("transaction-input") as HTMLInputElement;
 

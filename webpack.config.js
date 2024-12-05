@@ -6,8 +6,14 @@ const isProduction = process.env.NODE_ENV == 'production';
 
 const config = {
     entry: {
-        router: './src/tools/router/router.ts',
-        transaction: './src/tools/transaction/transaction.ts',        
+        index  : './src/tools/index/index.ts',
+
+        router : './src/tools/router/router.ts',
+        pools  : './src/tools/pools/pools.ts',        
+        nft    : './src/tools/nft/nft.ts',
+        account: './src/tools/account/account.ts',
+        
+        transaction: './src/tools/transaction/transaction.ts',       
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -18,18 +24,35 @@ const config = {
     },
     plugins: [
         new HtmlWebpackPlugin({
+            filename: 'index.html',
+            template: './src/tools/index/index.html',
+            chunks: ['index'], 
+        }),
+        new HtmlWebpackPlugin({
             filename: 'router.html',
             template: './src/tools/router/router.html',
             chunks: ['router'], 
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'pools.html',
+            template: './src/tools/pools/pools.html',
+            chunks: ['pools'], 
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'nft.html',
+            template: './src/tools/nft/nft.html',
+            chunks: ['nft'], 
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'account.html',
+            template: './src/tools/account/account.html',
+            chunks: ['account'], 
         }),
         new HtmlWebpackPlugin({
             filename: 'transaction.html',
             template: './src/tools/transaction/transaction.html',
             chunks: ['transaction'], 
         }),
-        new HtmlWebpackPlugin({
-            template: './src/index.html',
-        }),    
         new webpack.ProvidePlugin({
             Buffer: ['buffer', 'Buffer'],
         }),  

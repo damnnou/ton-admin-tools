@@ -22,3 +22,34 @@
     margin-right: 8px;
     flex-shrink: 0;
 }
+
+/* Reset the default list styling */
+ul.horizontal-menu {
+    list-style-type: none; /* Remove bullets */
+    margin: 0;            /* Remove margins */
+    padding: 12px 18px; 
+    display: flex;        /* Align items horizontally */
+    justify-content: center; /* Optional: Center align the menu */
+    background-color: #EFEFEF;
+}
+
+/* Style the list items */
+ul.horizontal-menu li {
+    margin: 0 10px;       /* Add spacing between menu items */
+}
+
+/* Style the links */
+ul.horizontal-menu li a {
+    /*text-decoration: none; */ /* Remove underline */
+    color: #333;            /* Text color */
+    padding: 10px 15px;     /* Add padding for click area */
+    border-radius: 4px;     /* Rounded corners */
+    transition: background-color 0.3s; /* Smooth hover effect */
+    font-size: 20px;
+}
+
+/* Hover effect for links */
+ul.horizontal-menu li a:hover {
+    background-color: #007BFF; /* Highlight background on hover */
+    color: #fff;               /* Change text color on hover */
+}

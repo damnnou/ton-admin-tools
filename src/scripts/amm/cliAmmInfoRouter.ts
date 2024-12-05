@@ -81,9 +81,9 @@ export async function ammInfoRouter(options : { [key: string]: any; }, logger : 
             const newAdmin = admin.loadAddressAny()
             const time = admin.loadUintBig(64)
             const timeDelta = time > nowTime
-            logger.log(` Admin   : ${newAdmin} till ${timeDelta ? logger.red(timeDelta.toString() + "left " + timeDelta + "s") :  logger.green(time.toString())}`)
+            logger.log(` - Admin   : ${newAdmin} till ${timeDelta ? logger.red(timeDelta.toString() + "left " + timeDelta + "s") :  logger.green(time.toString())}`)
         } else {
-            logger.log(` Admin   : No lock`)
+            logger.log(` - Admin   : No lock`)
         }
 
         if (codeLock) {
@@ -91,9 +91,9 @@ export async function ammInfoRouter(options : { [key: string]: any; }, logger : 
             const time = code.loadUintBig(64)
             const newCode = code.loadRef()
             const timeDelta = time > nowTime
-            logger.log(` Code    : Has Lock ${newCode.hash(0).toString("hex")} till ${timeDelta ? logger.red(timeDelta.toString() + "left " + timeDelta + "s") :  logger.green(time.toString())} `)
+            logger.log(` - Code    : Has Lock ${newCode.hash(0).toString("hex")} till ${timeDelta ? logger.red(timeDelta.toString() + "left " + timeDelta + "s") :  logger.green(time.toString())} `)
         } else {
-            logger.log(` Code    : No lock`)
+            logger.log(` - Code    : No lock`)
         }
 
         if (flagsLock) {
@@ -102,9 +102,9 @@ export async function ammInfoRouter(options : { [key: string]: any; }, logger : 
             const time = flags.loadUintBig(64)
             const timeDelta = time > nowTime
 
-            logger.log(` Flags   : Has Lock ${value} till ${timeDelta ? logger.red(timeDelta.toString() + "left " + timeDelta + "s") :  logger.green(time.toString())} `)
+            logger.log(` - Flags   : Has Lock ${value} till ${timeDelta ? logger.red(timeDelta.toString() + "left " + timeDelta + "s") :  logger.green(time.toString())} `)
         } else {
-            logger.log(` Flags   : No lock`)
+            logger.log(` - Flags   : No lock`)
         }
        
     }
