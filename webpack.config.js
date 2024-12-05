@@ -10,7 +10,7 @@ const config = {
         transaction: './src/tools/transaction/transaction.ts',        
     },
     output: {
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(__dirname, 'public'),
     },
     devServer: {
         open: true,

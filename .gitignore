@@ -2,6 +2,7 @@
 **/build/*.cell
 node_modules/
 dist/
+public
 **/.env*
 !.env.example
 **/.wget-hsts
