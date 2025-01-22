@@ -53,3 +53,82 @@ ul.horizontal-menu li a:hover {
     background-color: #007BFF; /* Highlight background on hover */
     color: #fff;               /* Change text color on hover */
 }
+
+
+
+/* Base styling for the table */
+table {
+    width: 80%;                  /* Set table width */
+    border-collapse: collapse;  /* Remove spacing between cells */
+    margin: 20px auto;          /* Center the table */
+    font-family: Arial, sans-serif; /* Font family */
+    background-color: #f9f9f9;  /* Light background color */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+}
+
+/* Styling for the table header */
+th {
+    background-color: #007BFF;  /* Blue header background */
+    color: white;               /* White text for header */
+    text-align: left;           /* Left align header text */
+    padding: 10px;              /* Padding inside header cells */
+    font-size: 16px;            /* Slightly larger font for header */
+}
+
+/* Styling for table rows */
+td {
+    padding: 10px;              /* Padding inside table cells */
+    border: 1px solid #ddd;     /* Light border between cells */
+}
+
+/* Zebra striping for rows */
+tr:nth-child(even) {
+    background-color: #f2f2f2;  /* Light gray for even rows */
+}
+
+/* Hover effect for rows */
+tr:hover {
+    background-color: #e9f5ff;  /* Light blue on hover */
+}
+
+/* Centered text for the header row */
+th, td {
+    text-align: center;
+}
+
+
+/* Container for the two columns */
+.column-container {
+    display: flex;          /* Use flexbox for layout */
+    flex-wrap: wrap;        /* Wrap columns if needed for smaller screens */
+    gap: 20px;              /* Space between columns */
+    padding: 20px;          /* Add padding around the container */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+/* Left column */
+.left-column {
+    flex: 1;                /* Take up equal space by default */
+    min-width: 200px;       /* Minimum width for the column */
+    background-color: #f4f4f4; /* Light gray background */
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    border-radius: 8px;     /* Rounded corners */
+}
+
+/* Right column */
+.right-column {
+    flex: 1;                /* Take up equal space by default */
+    min-width: 200px;       /* Minimum width for the column */
+    background-color: #e8f4fc; /* Light blue background */
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    border-radius: 8px;     /* Rounded corners */
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .container {
+        flex-direction: column; /* Stack columns vertically on smaller screens */
+    }
+}

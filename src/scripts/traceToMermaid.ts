@@ -93,7 +93,8 @@ function decodedToString(addrD: string, messageDecoded :MessageDecodedType, cont
     let op    = ""        
     let payloadTo = ""
 
-    for (let field in messageDecoded){
+    for (let field in messageDecoded)
+    {
         let value = messageDecoded[field].value
 
 
@@ -122,9 +123,9 @@ function decodedToString(addrD: string, messageDecoded :MessageDecodedType, cont
             if (BigInt(value) == TickMath.MAX_SQRT_RATIO     )      value = "MAX_SQRT_RATIO"
             else if (BigInt(value) == TickMath.MAX_SQRT_RATIO - 1n) value = "MAX_SQRT_RATIO - 1"
             else if (BigInt(value) == TickMath.MIN_SQRT_RATIO     ) value = "MIN_SQRT_RATIO"
-            
+            else if (BigInt(value) == TickMath.MIN_SQRT_RATIO + 1n) value = "MIN_SQRT_RATIO + 1"
          //   console.log(value)
-            else value = getApproxFloatPrice(BigInt(value)).toString()
+            else value = "p =" + getApproxFloatPrice(BigInt(value)).toString()
         }                   
     
 
@@ -158,8 +159,13 @@ function decodedToString(addrD: string, messageDecoded :MessageDecodedType, cont
                     console.log(payload)
                     value = "to " + target.name + "\n&nbsp; " + decodedToString(payloadTo, payload, contractDict).replace(/\n/g, "\n&nbsp; ")
                 }        
-            } else {                
-                value = value.substring(0, 16) + (value.length > 16 ? "..." : "");
+            } else {  
+                const emptyCellHex = Cell.EMPTY.toBoc().toString("hex")
+                if (value == emptyCellHex) {
+                    value = "Cell.EMPTY"
+                } else {
+                    value = value.substring(0, 16) + (value.length > 16 ? "..." : "");
+                }
             }
         }
 
@@ -206,6 +212,7 @@ export function traceToMermaid(transactions : Transaction[], contractDict : Cont
     lines.push(`title: ${name}`)
     lines.push("---")
     lines.push("flowchart TD")
+    lines.push("classDef decodedNode text-align:left,white-space:nowrap;")
     
     /* I will  identify all messages by src and creation time. */
     let messages: {[lt: string] : {raw: any, processed:string}} = {}
@@ -318,7 +325,7 @@ export function traceToMermaid(transactions : Transaction[], contractDict : Cont
 
     for (let lt in messages)
     {
-        lines.push(`style LT${lt} text-align:left`)
+        lines.push(`class LT${lt} decodedNode;`)
         lines.push(`LT${lt}[${messages[lt].processed}]`)
     } 
     

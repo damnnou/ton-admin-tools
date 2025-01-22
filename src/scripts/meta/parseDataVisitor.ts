@@ -66,7 +66,7 @@ export class ParseDataVisitor implements StructureVisitor {
         })
     }
 
-    enterCell(opts: { name: string; type?: "Maybe" | "" }): void {
+    enterCell(opts: { name: string; type?: "Maybe" | "IfExists" | "" }): void {
         if (this.skipFields)
             return
 
@@ -76,11 +76,20 @@ export class ParseDataVisitor implements StructureVisitor {
 
         if (opts.type && opts.type == "Maybe") {
             const subcell = workSlice.loadMaybeRef();
-            if (subcell != null)
+            if (subcell != null) {
                 this.slices.push(subcell.beginParse()) 
-            else 
+            } else {
                 this.slices.push(null) 
-        } else {
+            }
+        } else if (opts.type && opts.type == "IfExists") {
+            if (workSlice.remainingRefs > 0) {
+                const subcell = workSlice.loadRef();
+                this.slices.push(subcell.beginParse())
+            } else {
+                this.slices.push(null) 
+            }
+        } else
+        {
             this.slices.push(workSlice.loadRef().beginParse())
         }
     }
@@ -178,7 +187,7 @@ export class TLBGenVisitor implements StructureVisitor {
         this.result.push(this.indentation + `${field.name}:${tlbType}`)
     }
 
-    enterCell(opts: { name: string; type? : "Maybe" | "" }): void {
+    enterCell(opts: { name: string; type? : "Maybe" | "IfExists" | "" }): void {
         this.isMaybe = (opts.type == "Maybe")
 
         this.result.push(this.indentation + `${opts.name}:${this.isMaybe ? "(Maybe " : ""}^[`)

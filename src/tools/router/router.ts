@@ -3,8 +3,8 @@ import { Logger } from "../../scripts/consoleLogger";
 import { loadSharedParts } from "../common/common";
 
 loadSharedParts();
-const downloadElement = document.getElementById("router-button") as HTMLButtonElement;
+const buttonElement = document.getElementById("router-button") as HTMLButtonElement;
 
-downloadElement.addEventListener("click", async () => {
-    ammInfoRouter({}, new Logger("console"))
+buttonElement.addEventListener("click", async () => {
+    await ammInfoRouter({}, new Logger("console"))
 })

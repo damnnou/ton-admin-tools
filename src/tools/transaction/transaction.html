@@ -36,8 +36,10 @@
         <label for="transaction-input-label">Enter transaction id:</label>
     </div>
     <div>    
-        <input type="text"     id="transaction-input" value="077c6adc4dc57fe9287cc3f16a2473b34b0d1203c1734bb3a41363049ff42719"></input>
-        <input type="checkbox" id="testnet-input"></input>
+        <label>Transaction id:</label>
+        <input type="text"     id="transaction-input" value="916b861372764063a4cc1c36aedccccbd2621d8210ff67c17d1976b8035d65b8"></input>
+        <label>Is Testnet?</label>
+        <input type="checkbox" id="testnet-input" checked="true"></input>
     </div>
     <button id="download-and-parse-button">Download & Parse</button>
     <div>
@@ -49,7 +51,10 @@ A-->B
 A-->C
     </textarea>
     <button id="generate-button">Generate Graph</button>
-    <div id="graph-container"></div>
+    <div id="output-area">
+        <div id="graph-container"></div>
+        <div id="info-container"></div>
+    </div>
     <div id="footer-placeholder"></div>   
 
     <script src="bundle.js"></script>

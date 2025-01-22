@@ -28,7 +28,7 @@ export type MetaPredicate = {
 export interface StructureVisitor {
     /* Base TON types */
     visitField  (field: MetaMessageField ): void;
-    enterCell(opts:{name: string, type?: "Maybe" | "", comment? : string}) : void;
+    enterCell(opts:{name: string, type?: "Maybe" | "IfExists" | "", comment? : string}) : void;
     leaveCell(opts:{name? : string}) : void;
 
     predicateStart(predicate : MetaPredicate) : void;

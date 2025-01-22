@@ -6,6 +6,11 @@ import { TonClient, TonClient4, WalletContractV4, WalletContractV5R1 } from '@to
 import { mnemonicToWalletKey } from '@ton/crypto';
 
 
+export const explorerUrl = (address: string, isTestnet: boolean) => {
+  Address.parseFriendly(address); // check validity
+  return (isTestnet ? 'https://testnet.tonviewer.com/' : 'https://tonviewer.com/') + address;
+}
+
 export function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }

@@ -585,7 +585,7 @@ export class RouterV3Contract implements Contract {
 
         acceptor : (visitor: StructureVisitor) => {
             visitor.visitField({ name:`op`,                  type:`Uint`,    size:32,  meta:"op",  comment: ""})   
-            visitor.visitField({ name:`sender_wallet`,       type:`Address`, size:267, meta:"", comment:""})  
+            visitor.visitField({ name:`target_jetton_wallet`,type:`Address`, size:267, meta:"", comment:""})  
             visitor.visitField({ name:`sqrtPriceLimitX96`,   type:`Uint`,    size:160, meta:"PriceX96", comment: "Limit price. Swap won't go beyond it"}) 
             visitor.visitField({ name:`minOutAmount`,        type:`Coins`,   size:124, meta:"",    comment : ""}) 
             visitor.visitField({ name:`owner_address`,       type:`Address`, size:267, meta:"",    comment: "Address of the sender"})
@@ -596,6 +596,9 @@ export class RouterV3Contract implements Contract {
             visitor.visitField({ name:`ok_forward_payload`,  type:`Cell`,    size:0,   meta:"Payload", comment: "Payload for processing by target with swapped coins"}) 
             visitor.visitField({ name:`ret_forward_amount`,  type:`Coins`,   size:124, meta:"",        comment : ""}) 
             visitor.visitField({ name:`ret_forward_payload`, type:`Cell`,    size:0,   meta:"Payload", comment: "Payload for processing by owner with change/return coins"}) 
+            visitor.leaveCell({})
+            visitor.enterCell( { name:"referral_cell",       type:`IfExists`, comment : "Cell with referral data"})
+            visitor.visitField({ name:`code`,                type:`Uint`,    size:32,  meta:"",  comment: ""})               
             visitor.leaveCell({})
         }
     },   
@@ -611,10 +614,16 @@ export class RouterV3Contract implements Contract {
             visitor.visitField({ name:`exit_code`, type:`Uint`,    size:32,  meta:"",   comment: "queryid as of the TON documentation"}) 
             visitor.visitField({ name:`seqno`   ,  type:`Uint`,    size:64,  meta:"Indexer",   comment: "queryid as of the TON documentation"}) 
             visitor.enterCell( { name:"coinsinfo_cell",  type:`Maybe`,  comment : "Cell with info about the coins"})
-            visitor.visitField({ name:`amount0`,         type:`Coins`,    size:124,  meta:"", comment : "Amount of coins to be payed to reciever0"}) 
-            visitor.visitField({ name:`jetton0_address`, type:`Address`,  size:267,  meta:"", comment : "Jetton to be sent to reciever0 identified by the wallet that belongs to router"}) 
-            visitor.visitField({ name:`amount1`,         type:`Coins`,    size:124,  meta:"", comment : "Amount of coins to be payed to reciever1"}) 
-            visitor.visitField({ name:`jetton1_address`, type:`Address`,  size:267,  meta:"", comment:  "Jetton to be sent to reciever1 identified by the wallet that belongs to router"}) 
+                visitor.visitField({ name:`amount0`,         type:`Coins`,    size:124,  meta:"", comment : "Amount of coins to be payed to reciever0"}) 
+                visitor.visitField({ name:`jetton0_address`, type:`Address`,  size:267,  meta:"", comment : "Jetton to be sent to reciever0 identified by the wallet that belongs to router"}) 
+                visitor.visitField({ name:`amount1`,         type:`Coins`,    size:124,  meta:"", comment : "Amount of coins to be payed to reciever1"}) 
+                visitor.visitField({ name:`jetton1_address`, type:`Address`,  size:267,  meta:"", comment:  "Jetton to be sent to reciever1 identified by the wallet that belongs to router"}) 
+                visitor.enterCell( { name:"indexer_swap_info_cell",  type:`IfExists`, comment : "Information about the payload"})
+                    visitor.visitField({ name:`payload_amount0`,  type:`Coins`, size:124, meta:""     , comment: ""}) 
+                    visitor.visitField({ name:`payload_0`,        type:`Cell`,  size:1,   meta:"Maybe, Payload", comment: ""}) 
+                    visitor.visitField({ name:`payload_amount1`,  type:`Coins`, size:124, meta:""     , comment: ""})   
+                    visitor.visitField({ name:`payload_1`,        type:`Cell`,  size:1,   meta:"Maybe, Payload", comment: ""})                   
+                visitor.leaveCell({})
             visitor.leaveCell({})
 
             //visitor.visitField({ name:`indexerinfo_cell`, type:`Cell`, meta: `Maybe`, size:0, comment: "Information for indexer to process" })

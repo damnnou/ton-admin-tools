@@ -1,9 +1,14 @@
-import { Cell, Transaction } from "@ton/core";
+import { Address, Cell, Contract, Transaction } from "@ton/core";
 import { Api, HttpClient, Trace } from "tonapi-sdk-js";
 import { flattenTrace } from "../../scripts/tonapiTotoncore";
 import { ContractDictionary, traceToMermaid, UniversalParser } from "../../scripts/traceToMermaid";
 import mermaid from 'mermaid';
 import { loadSharedParts } from "../common/common";
+import { ApolloClient, InMemoryCache, gql } from "@apollo/client/core";
+import { JettonAPI } from "../../wrappers/JettonAPI";
+import { TonClient4 } from "@ton/ton";
+import { getUserAndClient } from "../../scripts/utils";
+import { getHttpV4Endpoint } from "@orbs-network/ton-access";
 
 
 // Import Mermaid for initialization and rendering
@@ -11,7 +16,8 @@ import { loadSharedParts } from "../common/common";
 
 loadSharedParts();
 
-const traceInputElement = document.getElementById("transaction-input") as HTMLInputElement;
+const traceInputElement  = document.getElementById("transaction-input") as HTMLInputElement;
+const testnetFlagElement = document.getElementById("testnet-input") as HTMLInputElement;
 
 
 const mermaidInputElement = document.getElementById("mermaid-input") as HTMLTextAreaElement;
@@ -26,7 +32,7 @@ mermaid.initialize({ startOnLoad: false });
 
 downloadElement.addEventListener("click", async () => {
         const API_KEY = "AGHD4DYGGAWBDZAAAAAPYUMY4V22MOI74LDT4VIF47EBFARRYYABMNGJMDGF6QJI2JATNKA";
-        const testnet = false
+        const testnet = testnetFlagElement.checked
 
         /* tonApi client for fetching additional data, such as jetton balances, etc. */
         const httpClient = new HttpClient({
@@ -45,6 +51,11 @@ downloadElement.addEventListener("click", async () => {
         //const traces = await client.accounts.getAccountTraces(accout, {limit : 1})
         
         //const traceId = traces.traces[0].id
+
+        const {client: clientAPI, name:credentialsName} = await getUserAndClient()
+        let endpoint = await getHttpV4Endpoint({ network: testnet ? "testnet" : "mainnet" })
+        let orbsClient = new TonClient4({ endpoint })
+
         const traceId = traceInputElement.value.trim();       
         console.log(`We will load and decode ${traceId}`)
         
@@ -58,12 +69,93 @@ downloadElement.addEventListener("click", async () => {
     
         const flatTrace : Transaction[] = flattenTrace(trace)
         console.log(` Trace has ${flatTrace.length} transactions`)
+
+        let contractDict: ContractDictionary = {
+            "EQBxIE-Z9UhJI50Gew7cDAVRMwTy98zEsd08cbrLHwuvU1Is" : {name: "Testnet Wallet", parser: (x: Cell) => UniversalParser.printParsedInput(x)},
+            "EQDnfag9lHlc0rS6YeI7WwRq-3ltcKSsYxLiXmveB7gNUzNO" : {name: "Testnet Router", parser: (x: Cell) => UniversalParser.printParsedInput(x)},
+        }
+        /*Let's load addressbook. Bring this to another file */
+        const POOLS_QUERY = gql`
+        query PoolsQuery {  
+          pools {    
+            name
+            address
+            jetton0 {
+                address
+                symbol
+                decimals
+            }
+            jetton1 {
+                address
+                symbol
+                decimals
+            }
+            totalValueLockedUsd
+          }   
+        }
+        `;
+        
+        const apolloClient = new ApolloClient({
+            uri: testnet ? "https://testnet-indexer.tonco.io" : "https://indexer.tonco.io/", // Replace with your GraphQL endpoint
+            credentials: 'same-origin',
+            cache: new InMemoryCache(),
+        });
     
-        let contractDict: ContractDictionary = {}
+        let jettons : { [address: string] : {
+            name : string, 
+            address: string, 
+            decimals : number,
+            walletBalance : bigint, 
+            poolsBalance: bigint} 
+        } = {}
+    
+        try {
+            const response = await apolloClient.query({ query: POOLS_QUERY });
+            const apolloPoolList =  response.data.pools
+            console.log(apolloPoolList.length);
+    
+            
+            for (let poolData of apolloPoolList) {
+                jettons[poolData.jetton0.address] = {name: poolData.jetton0.symbol, address: poolData.jetton0.address, decimals:poolData.jetton0.decimals, walletBalance: 0n, poolsBalance: 0n}
+                jettons[poolData.jetton1.address] = {name: poolData.jetton1.symbol, address: poolData.jetton1.address, decimals:poolData.jetton1.decimals, walletBalance: 0n, poolsBalance: 0n}            
+
+                let name = "Pool_" + poolData.name.replace("-", "_").replace("₮","T")
+                
+                contractDict[Address.parse(poolData.address).toString()] = { name: name, parser: (x: Cell) => UniversalParser.printParsedInput(x) }  
+                //contractDict[poolData.jetton0.address] = {name: poolData.jetton0.symbol}
+                //contractDict[poolData.jetton1.address] = {name: poolData.jetton1.symbol}
+            }
+            
+
+            for (let jetton of Object.keys(jettons)) {
+                console.log(`processing ${jetton}`)
+                let jettonApi : JettonAPI = new JettonAPI(Address.parse(jetton))
+                await jettonApi.open((x: Contract) => orbsClient.open(x))
+                let walletJAddress = await jettonApi.getWalletAddress(Address.parse("EQBxIE-Z9UhJI50Gew7cDAVRMwTy98zEsd08cbrLHwuvU1Is"))
+                let routerJAddress = await jettonApi.getWalletAddress(Address.parse("EQDnfag9lHlc0rS6YeI7WwRq-3ltcKSsYxLiXmveB7gNUzNO"))
+
+                let name = jettons[jetton].name.replace("-", "_").replace("₮","T")
+                contractDict[walletJAddress.toString()] = { name: `wallet_jetton_for_` + name, parser: (x: Cell) => UniversalParser.printParsedInput(x) }  
+                contractDict[routerJAddress.toString()] = { name: `router_jetton_for_` + name, parser: (x: Cell) => UniversalParser.printParsedInput(x) }  
+                
+                
+            }
+
+
+        } catch (e)        
+        {
+            console.log(e)
+        }
+
         for (let tx of flatTrace) {
-            contractDict[tx.inMessage!.info.dest!.toString()] = {name: "?", parser: (x: Cell) => UniversalParser.printParsedInput(x)  }
+            let name = tx.inMessage!.info.dest!.toString()
+            if (!contractDict[name]) {
+                contractDict[name] = {name: "?", parser: (x: Cell) => UniversalParser.printParsedInput(x)  }
+            }
             
         }
+
+        console.log(contractDict)
     
         mermaidInputElement.value = traceToMermaid(flatTrace, contractDict)
               
