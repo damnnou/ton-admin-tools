@@ -10,6 +10,8 @@ import { ParseDataVisitor } from "./meta/parseDataVisitor";
 import { ContractMessageMeta } from "./meta/structureVisitor";
 import { JettonWallet } from "../wrappers/common/JettonWallet";
 import { PTonWalletV2 } from "../wrappers/3rd_party/PTonWalletV2";
+import { PoolFactoryContract } from "../wrappers/PoolFactoryContract";
+import { JettonMinter } from "../wrappers/common/JettonMinter";
 
 function printParsedInput(obj : any , body: Cell) : ContractMessageMeta[] {
 
@@ -35,7 +37,7 @@ export class UniversalParser
     static printParsedInput(body: Cell) : ContractMessageMeta[] {
         let result : ContractMessageMeta[] = []
 
-        let objects = [RouterV3Contract, PoolV3Contract, PositionNFTV3Contract, AccountV3Contract]
+        let objects = [RouterV3Contract, PoolV3Contract, PositionNFTV3Contract, AccountV3Contract, PoolFactoryContract]
         for (let obj of objects) {
             if ("metaDescription" in obj) {
                 //console.log(`${obj} has a field with metaDescription`)
@@ -53,9 +55,23 @@ export class UniversalParser
                 return result    
         } catch {}
         try {        
+            result = JettonMinter.printParsedInput(body)
+            if (result.length != 0)
+                return result    
+        } catch {}
+        try {        
             result = PTonWalletV2.printParsedInput(body)
             if (result.length != 0)
                 return result    
+        } catch {}
+        try {        
+            let p = body.beginParse()        
+            let op : number  = p.preloadUint(32)
+            if (op == 0xffffffff) {
+                return [
+                    { name:`op` , value: `${p.loadUint(32) }`, type:`Uint(32) op`}
+                ]
+            }
         } catch {}
         return result
     }

@@ -7,6 +7,7 @@
  **/ 
 
 export class ContractOpcodes {
+    static BOUNCE                    : number = 0xffffffff // 4294967295
     static ACCOUNTV3_RESET_GAS       : number = 0x42a0fb43 // 1117846339
     static ACCOUNTV3_ADD_LIQUIDITY   : number = 0x3ebe5431 // 1052660785
     static ACCOUNTV3_CB_ADD_LIQUIDITY : number = 0x56dfeb8a // 1457515402
@@ -152,6 +153,7 @@ export const OpcodesLookup : {[x : number] : string} = {
     0xf58760ef : "POSITIONNFTV3_OWNERSHIP_ASSIGNED_NOTIFY",
     0xfd1a73e7 : "SINKV3_ADD",
     0xfffffeee : "SINKV3_DUMMY",
+    0xffffffff : "BOUNCE",
 }
 export class ContractErrors {
     static COMMON_WRONG_OP                 : number = 65535 // 0xffff

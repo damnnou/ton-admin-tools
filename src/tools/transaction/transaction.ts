@@ -18,7 +18,7 @@ loadSharedParts();
 
 const traceInputElement  = document.getElementById("transaction-input") as HTMLInputElement;
 const testnetFlagElement = document.getElementById("testnet-input") as HTMLInputElement;
-
+const indexerFlagElement = document.getElementById("indexer-input") as HTMLInputElement;
 
 const mermaidInputElement = document.getElementById("mermaid-input") as HTMLTextAreaElement;
 
@@ -30,9 +30,46 @@ const graphContainer = document.getElementById("graph-container") as HTMLDivElem
 // Initialize Mermaid
 mermaid.initialize({ startOnLoad: false });
 
+
+async function fillDictFromIndexer(testnet : boolean, contractDict : ContractDictionary ) {
+    const JETTONS_QUERY = gql`
+        query JettonsQuery {
+            jettons {
+                address
+                wallet
+                symbol
+                name
+                decimals
+                volumeUsd
+            }
+        }
+        `;
+    
+        const apolloClient = new ApolloClient({
+            uri: testnet ? "https://testnet-indexer.tonco.io" : "https://indexer.tonco.io/", // Replace with your GraphQL endpoint
+            credentials: 'same-origin',
+            cache: new InMemoryCache(),
+        });
+
+        const response = await apolloClient.query({ query: JETTONS_QUERY });
+            const apolloJettonList =  response.data.jettons
+            console.log(apolloJettonList.length);
+        
+        console.log(apolloJettonList)
+
+        for (let jettonData of apolloJettonList) {
+            const minterAddress = Address.parse(jettonData.address).toString()
+            contractDict[minterAddress] = {name: `Minter_${jettonData.name}`, parser: (x: Cell) => UniversalParser.printParsedInput(x)}
+
+            const walletAddress = Address.parse(jettonData.wallet).toString()
+            contractDict[walletAddress] = {name: `RWallet_${jettonData.name}`, parser: (x: Cell) => UniversalParser.printParsedInput(x)}
+        }
+}
+
 downloadElement.addEventListener("click", async () => {
         const API_KEY = "AGHD4DYGGAWBDZAAAAAPYUMY4V22MOI74LDT4VIF47EBFARRYYABMNGJMDGF6QJI2JATNKA";
         const testnet = testnetFlagElement.checked
+        const jettonIndexer = indexerFlagElement.checked
 
         /* tonApi client for fetching additional data, such as jetton balances, etc. */
         const httpClient = new HttpClient({
@@ -73,6 +110,9 @@ downloadElement.addEventListener("click", async () => {
         let contractDict: ContractDictionary = {
             "EQBxIE-Z9UhJI50Gew7cDAVRMwTy98zEsd08cbrLHwuvU1Is" : {name: "Testnet Wallet", parser: (x: Cell) => UniversalParser.printParsedInput(x)},
             "EQDnfag9lHlc0rS6YeI7WwRq-3ltcKSsYxLiXmveB7gNUzNO" : {name: "Testnet Router", parser: (x: Cell) => UniversalParser.printParsedInput(x)},
+
+            "EQDiNOe3qNffbCsEeX-6KYWT26TT1xL7D-dqx47-qqEkp4e9" : {name: "Mainnet Pool Factory", parser: (x: Cell) => UniversalParser.printParsedInput(x)},
+            "EQC_-t0nCnOFMdp7E7qPxAOCbCWGFz-e3pwxb6tTvFmshjt5" : {name: "Mainnet Router", parser: (x: Cell) => UniversalParser.printParsedInput(x)},
         }
         /*Let's load addressbook. Bring this to another file */
         const POOLS_QUERY = gql`
@@ -127,18 +167,20 @@ downloadElement.addEventListener("click", async () => {
             }
             
 
-            for (let jetton of Object.keys(jettons)) {
-                console.log(`processing ${jetton}`)
-                let jettonApi : JettonAPI = new JettonAPI(Address.parse(jetton))
-                await jettonApi.open((x: Contract) => orbsClient.open(x))
-                let walletJAddress = await jettonApi.getWalletAddress(Address.parse("EQBxIE-Z9UhJI50Gew7cDAVRMwTy98zEsd08cbrLHwuvU1Is"))
-                let routerJAddress = await jettonApi.getWalletAddress(Address.parse("EQDnfag9lHlc0rS6YeI7WwRq-3ltcKSsYxLiXmveB7gNUzNO"))
+            if (!jettonIndexer) {
+                for (let jetton of Object.keys(jettons)) {
+                    console.log(`processing ${jetton}`)
+                    let jettonApi : JettonAPI = new JettonAPI(Address.parse(jetton))
+                    await jettonApi.open((x: Contract) => orbsClient.open(x))
+                    let walletJAddress = await jettonApi.getWalletAddress(Address.parse("EQBxIE-Z9UhJI50Gew7cDAVRMwTy98zEsd08cbrLHwuvU1Is"))
+                    let routerJAddress = await jettonApi.getWalletAddress(Address.parse("EQDnfag9lHlc0rS6YeI7WwRq-3ltcKSsYxLiXmveB7gNUzNO"))
 
-                let name = jettons[jetton].name.replace("-", "_").replace("₮","T")
-                contractDict[walletJAddress.toString()] = { name: `wallet_jetton_for_` + name, parser: (x: Cell) => UniversalParser.printParsedInput(x) }  
-                contractDict[routerJAddress.toString()] = { name: `router_jetton_for_` + name, parser: (x: Cell) => UniversalParser.printParsedInput(x) }  
-                
-                
+                    let name = jettons[jetton].name.replace("-", "_").replace("₮","T")
+                    contractDict[walletJAddress.toString()] = { name: `wallet_jetton_for_` + name, parser: (x: Cell) => UniversalParser.printParsedInput(x) }  
+                    contractDict[routerJAddress.toString()] = { name: `router_jetton_for_` + name, parser: (x: Cell) => UniversalParser.printParsedInput(x) }  
+                }
+            } else {
+                await fillDictFromIndexer(testnet, contractDict)
             }
 
 
@@ -150,7 +192,7 @@ downloadElement.addEventListener("click", async () => {
         for (let tx of flatTrace) {
             let name = tx.inMessage!.info.dest!.toString()
             if (!contractDict[name]) {
-                contractDict[name] = {name: "?", parser: (x: Cell) => UniversalParser.printParsedInput(x)  }
+                contractDict[name] = {name: name, parser: (x: Cell) => UniversalParser.printParsedInput(x)  }
             }
             
         }
