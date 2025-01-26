@@ -5,7 +5,7 @@ import { getUserAndClient } from "../utils";
 import { AddressBook } from "../addressbook";
 
 export async function ammInfoRouter(options : { [key: string]: any; }, logger : any) {
-    logger.log(options)
+    // logger.log(options)
 
     const {client: clientAPI, name:credentialsName} = await getUserAndClient()
     let client = clientAPI as TonClient4

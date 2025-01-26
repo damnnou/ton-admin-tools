@@ -69,9 +69,9 @@ export async function ammInfo(options : { [key: string]: any; }, logger : any)
         logger.log(`  Jetton0   : wallet: ${checked0String}  minter: ${ poolState.jetton0_minter} [${jetton0.metadata.symbol}] - ${reserve0}`)
         logger.log(`  Jetton1   : wallet: ${checked1String}  minter: ${ poolState.jetton1_minter} [${jetton1.metadata.symbol}] - ${reserve1}`)
         logger.log("Admins:")
-        logger.log("  Admin     :", poolState.admin_address)
-        logger.log("  Router    :", poolState.router_address)
-        logger.log("  Controller:", poolState.controller_address)
+        logger.log("  Admin     : ", logger.magenta(poolState.admin_address))
+        logger.log("  Router    : ", logger.magenta(poolState.router_address))
+        logger.log("  Controller: ", logger.magenta(poolState.controller_address))
 
 
         logger.log(`Pool Data: - ${ poolState.pool_active ? logger.green("Active"): logger.red("Locked")}`)

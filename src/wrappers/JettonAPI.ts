@@ -173,10 +173,24 @@ export class JettonAPI {
             
                 const data = await response.json();  // Parse the JSON
                 this.metadata = {...this.metadata, ...data } 
-              } catch (error) {
+            } catch (error) {
                 console.error("Failed to download and parse JSON", error);
-                throw error;  // Rethrow the error for further handling
-              }
+                if ( this.minterOpened.address.toString() == "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs" ) {
+                    this.metadata = {
+                        "address": "0:b113a994b5024a16719f69139328eb759596c38a25f59028b146fecdc3621dfe",
+                        "name": "Tether USD",
+                        "symbol": "USD₮",
+                        "decimals": "6",
+                        "image": "https://cache.tonapi.io/imgproxy/T3PB4s7oprNVaJkwqbGg54nexKE0zzKhcrPv8jcWYzU/rs:fill:200:200:1/g:no/aHR0cHM6Ly90ZXRoZXIudG8vaW1hZ2VzL2xvZ29DaXJjbGUucG5n.webp",
+                        "description": "Tether Token for Tether USD"
+                    }
+                }
+                //throw error;  // Rethrow the error for further handling
+            }
+        }
+        
+        if (!this.metadata.decimals) {
+            this.metadata["decimals"] = "9"
         }
 
         this.walletCodeCell = data.walletCode
