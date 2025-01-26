@@ -15,6 +15,7 @@ export function loadSharedParts() {
         <h1>List of tools</h1>
         <ul class="horizontal-menu">
                 <li><a href="router.html"> Router </a></li>
+                <li><a href="pool_factory.html"> Pool Factory </a></li>
                 <li><a href="pools.html">   Pool </a></li>
                 <li><a href="nft.html">   Position NFT </a></li>
                 <li><a href="account.html">   User Account</a></li>

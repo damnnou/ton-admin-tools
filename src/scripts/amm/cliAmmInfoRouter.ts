@@ -72,7 +72,7 @@ export async function ammInfoRouter(options : { [key: string]: any; }, logger : 
         const adminLock = timelocks.loadMaybeRef()
         const flagsLock = timelocks.loadMaybeRef()
         
-        const nowTime = Math.floor(Date.now() / 1000)
+        const nowTime = BigInt(Math.floor(Date.now() / 1000))
         logger.log(` Timelock delay : ${dataUnpacked.timelockDelay}` )
         logger.log(` Now      : ${nowTime}` )
       
@@ -81,7 +81,7 @@ export async function ammInfoRouter(options : { [key: string]: any; }, logger : 
             const newAdmin = admin.loadAddressAny()
             const time = admin.loadUintBig(64)
             const timeDelta = time > nowTime
-            logger.log(` - Admin   : ${newAdmin} till ${timeDelta ? logger.red(timeDelta.toString() + "left " + timeDelta + "s") :  logger.green(time.toString())}`)
+            logger.log(` - Admin   : ${newAdmin} till ${timeDelta ? logger.red((time - nowTime).toString() + "s left " + time) :  logger.green(time.toString())}`)
         } else {
             logger.log(` - Admin   : No lock`)
         }
@@ -91,7 +91,7 @@ export async function ammInfoRouter(options : { [key: string]: any; }, logger : 
             const time = code.loadUintBig(64)
             const newCode = code.loadRef()
             const timeDelta = time > nowTime
-            logger.log(` - Code    : Has Lock ${newCode.hash(0).toString("hex")} till ${timeDelta ? logger.red(timeDelta.toString() + "left " + timeDelta + "s") :  logger.green(time.toString())} `)
+            logger.log(` - Code    : Has Lock ${newCode.hash(0).toString("hex")} till ${timeDelta ? logger.red((time - nowTime).toString() + "s left " + time) :  logger.green(time.toString())} `)
         } else {
             logger.log(` - Code    : No lock`)
         }
@@ -102,7 +102,7 @@ export async function ammInfoRouter(options : { [key: string]: any; }, logger : 
             const time = flags.loadUintBig(64)
             const timeDelta = time > nowTime
 
-            logger.log(` - Flags   : Has Lock ${value} till ${timeDelta ? logger.red(timeDelta.toString() + "left " + timeDelta + "s") :  logger.green(time.toString())} `)
+            logger.log(` - Flags   : Has Lock ${value} till ${timeDelta ? logger.red((time - nowTime).toString() + "s left " + time ) :  logger.green(time.toString())} `)
         } else {
             logger.log(` - Flags   : No lock`)
         }

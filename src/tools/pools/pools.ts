@@ -4,7 +4,7 @@ import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
 import { explorerUrl, getUserAndClient } from "../../scripts/utils";
 import { Address, TonClient4 } from "@ton/ton";
 import { ammInfo } from "../../scripts/amm/cliAmmInfoPool";
-import { Logger } from "../../scripts/consoleLogger";
+import { Logger } from "../../scripts/consoleWebLogger";
 
 loadSharedParts()
 loadDevMessages()

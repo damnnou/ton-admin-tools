@@ -8,10 +8,11 @@ const config = {
     entry: {
         index  : './src/tools/index/index.ts',
 
-        router : './src/tools/router/router.ts',
-        pools  : './src/tools/pools/pools.ts',        
-        nft    : './src/tools/nft/nft.ts',
-        account: './src/tools/account/account.ts',
+        router       : './src/tools/router/router.ts',
+        pool_factory : './src/tools/pool_factory/pool_factory.ts',        
+        pools        : './src/tools/pools/pools.ts',        
+        nft          : './src/tools/nft/nft.ts',
+        account      : './src/tools/account/account.ts',
         
         transaction: './src/tools/transaction/transaction.ts',       
     },
@@ -27,6 +28,11 @@ const config = {
             filename: 'index.html',
             template: './src/tools/index/index.html',
             chunks: ['index'], 
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'pool_factory.html',
+            template: './src/tools/pool_factory/pool_factory.html',
+            chunks: ['pool_factory'], 
         }),
         new HtmlWebpackPlugin({
             filename: 'router.html',

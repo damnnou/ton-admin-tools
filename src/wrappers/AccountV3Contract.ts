@@ -129,8 +129,8 @@ export class AccountV3Contract implements Contract {
         description : "This operation adds liquidity and a minting request to the account. This contract is used as a barrier to " + 
         "collect together data about the proofs of funding two tokens and the request to mint some liquidity. " + 
         "Common usage is as follows - send one jetton with the mint instructions and the second jetton with the mint instructions. And as " +
-        "soon as they will both arrive AccountV3 would trigger the minting request in the pool. This makes minting independant of the order in which " +
-        "jettons arrive. " + "Account referees to jettons in the pool (account::pool_address) order",
+        "soon as they will both arrive AccountV3 would trigger the minting request in the pool. This makes minting independent of the order in which " +
+        "jettons arrive. " + "Account refers to jettons in the pool (account::pool_address) order",
         rights : "This operation is allowed for account::pool_address",
         acceptor : (visitor: StructureVisitor) => {
             visitor.visitField({ name:`op`,             type:`Uint`, size:32,  meta:"op", comment : ""})    

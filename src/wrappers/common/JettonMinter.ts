@@ -197,7 +197,7 @@ export class JettonMinter implements Contract {
             visitor.visitField({ name:`op`,               type:`Uint`,    size:32,  meta:"op",   comment: ""})    
             visitor.visitField({ name:`query_id`,         type:`Uint`,    size:64,  meta:""  ,   comment : "queryid as of the TON documentation"}) 
 
-            visitor.visitField({ name:`owner`,             type:`Address`, size:267, meta:"" ,        comment: "Owner for witch to query"})
+            visitor.visitField({ name:`owner`,             type:`Address`, size:267, meta:"" ,        comment: "Owner for which to query"})
             visitor.visitField({ name:`include_owner `,    type:`Uint`,    size:1,   meta:"Boolean" , comment: ""})
         }
     },
