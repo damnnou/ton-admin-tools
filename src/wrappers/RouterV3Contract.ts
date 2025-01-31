@@ -532,7 +532,7 @@ export class RouterV3Contract implements Contract {
             visitor.visitField({ name:`query_id`,        type:`Uint`,    size:64,   meta:"",   comment: "queryid as of the TON documentation"}) 
             visitor.visitField({ name:`jetton_amount`,   type:`Coins`,   size:124,  meta:"",   comment: "Amount of coins sent to the router"}) 
             visitor.visitField({ name:`from_user`,       type:`Address`, size:267,  meta:"",   comment: "User that originated the transfer"})
-            visitor.visitField({ name:`forward_payload`, type:`Cell`,    size:0,    meta:"Either, Payload",comment: "Payload for processing"}) 
+            visitor.visitField({ name:`forward_payload`, type:`Cell`,    size:0,    meta:"Either, Maybe, Payload",comment: "Payload for processing"}) 
         }
     },
     {

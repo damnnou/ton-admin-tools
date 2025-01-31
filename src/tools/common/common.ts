@@ -19,6 +19,7 @@ export function loadSharedParts() {
                 <li><a href="pools.html">   Pool </a></li>
                 <li><a href="nft.html">   Position NFT </a></li>
                 <li><a href="account.html">   User Account</a></li>
+                <li><a href="jetton.html"> Jetton </a></li>
                 <li><a href="transaction.html"> Transaction </a></li>
 
         </ul>

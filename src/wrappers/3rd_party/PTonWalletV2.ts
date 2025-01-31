@@ -1,7 +1,7 @@
 import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Dictionary, ExternalAddress, Sender, SendMode, Slice } from '@ton/core';
 import { JettonWalletContractBase } from '../common/abcJettonWallet';
 import { beginMessage } from '../common/abcJettonMinter';
-import { ContractMessageMeta } from '../../scripts/meta/structureVisitor';
+import { ContractMessageMeta, MetaMessage, StructureVisitor } from '../../scripts/meta/structureVisitor';
 import { ContractOpcodes } from '../opCodes';
 
 
@@ -122,52 +122,24 @@ export class PTonWalletV2 extends JettonWalletContractBase<typeof proxyWalletOpc
     }
 
 
-    static printParsedInput(body: Cell) : ContractMessageMeta[] {
-        let result : ContractMessageMeta[] = []
-  
-        let p = body.beginParse()        
-        let op : number  = p.preloadUint(32)
-        
+    static metaDescription : MetaMessage[] =
+    [
+    {
+        opcode : ContractOpcodes.JETTON_TRANSFER,
+        description : "Process router funding, payload determines if it is mint or swap",
 
-        if (op == ContractOpcodes.JETTON_TRANSFER)
-        {          
-            result.push({ name:`op`                    , value: `${p.loadUint(32)  }`, type:`Uint(32),op`})  
-            result.push({ name:`query_id`              , value: `${p.loadUint(64) }` , type:`Uint(64) ` })              
-            result.push({ name:`jetton_amount`         , value: `${p.loadCoins()  }` , type:`Coins()  ` })             
-            result.push({ name:`to_owner_address`      , value: `${p.loadAddress()}` , type:`Address()` })                
-            result.push({ name:`response_address`      , value: `${p.loadAddress()}` , type:`Address()` })                
-
-            let customPayload = p.loadMaybeRef()
-            if (customPayload) {
-                result.push({ name:`custom_payload`    , value: customPayload.toBoc().toString('hex') , type:`Cell()` })
-            } else {
-                result.push({ name:`custom_payload`    , value: `none` , type:`Cell()` })
-            }
-            result.push({ name:`forward_ton`           , value: `${p.loadCoins()}` , type:`Coins()` })                
-            let forwardPayload = p.loadMaybeRef()
-            if (forwardPayload) {
-                result.push({ name:`forward_payload`   , value: forwardPayload.toBoc().toString('hex') , type:`Cell(), Payload` })
-            } else {
-                result.push({ name:`forward_payload`   , value: `none` , type:`Cell()` })
-            }
-            
-
-            //result.push({ name:`custom_payload`        , value: `${p.loadCe() }`     , type:`` })            
-
-            //result.push({ name:`forward_ton_amount`    , value: `${p.loadCoins()}`    , type:`` })             
-            //result.push({ name:`either_forward_payload`, value: `?`                 , type:`` })
+        acceptor : (visitor: StructureVisitor) => {
+            visitor.visitField({ name:`op`,               type:`Uint`,    size:32,   meta:"op", comment: ""})    
+            visitor.visitField({ name:`query_id`,         type:`Uint`,    size:64,   meta:"",   comment: "queryid as of the TON documentation"}) 
+            visitor.visitField({ name:`jetton_amount`,    type:`Coins`,   size:124,  meta:"",   comment: "Amount of coins sent to the router"}) 
+            visitor.visitField({ name:`to_owner_address`, type:`Address`, size:267,  meta:"",   comment: "User that originated the transfer"})
+            visitor.visitField({ name:`response_address`, type:`Address`, size:267,  meta:"",   comment: "User that waits for the response"}) 
+            visitor.visitField({ name:`custom_payload`,   type:`Cell`,    size:0,    meta:"Maybe, Payload",comment: "Payload for processing by jetton itself"}) 
+            visitor.visitField({ name:`forward_ton`,      type:`Coins`,   size:124,  meta:"",   comment: "Amount of to attach to forward payload"})
+            visitor.visitField({ name:`forward_payload`,  type:`Cell`,    size:0,    meta:"Either, Payload",comment: "Payload for processing"}) 
         }
-
-        if (op == ContractOpcodes.TONPROXY_MINTER_TON_TRANSFER)
-        {     
-            result.push({ name:`op`                , value: `${p.loadUint(32) }`, type:`Uint(32) op`})  
-            result.push({ name:`query_id`          , value: `${p.loadUint(64) }`, type:`Uint(64)` })              
-            result.push({ name:`ton_amount`          , value: `${p.loadCoins()  }` , type:`Coins()  ` })          
-            result.push({ name:`refund_address`       , value: `${p.loadAddress()}` , type:`Address()` })             
-        }
-
-
-        return result
-    } 
+    }
+    ]
+ 
 
 }

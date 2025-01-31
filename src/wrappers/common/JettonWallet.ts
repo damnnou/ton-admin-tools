@@ -1,6 +1,6 @@
 import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode, toNano } from '@ton/core';
 import { ContractOpcodes, OpcodesLookup } from '../opCodes';
-import { ContractMessageMeta } from '../../scripts/meta/structureVisitor';
+import { ContractMessageMeta, MetaMessage, StructureVisitor } from '../../scripts/meta/structureVisitor';
 
 export type JettonWalletConfig = {
     balance : bigint,
@@ -197,68 +197,41 @@ export class JettonWallet implements Contract {
         };
     }
 
+
+    static metaDescription : MetaMessage[] =     
+    [
+        {
+            opcode : ContractOpcodes.JETTON_TRANSFER,
+            description : "Jetton transfer initiation",
     
-    static printParsedInput(body: Cell) : ContractMessageMeta[] {
-        let result : ContractMessageMeta[] = []
-  
-        const OpLookup : {[key : number] : string} = OpcodesLookup
-        let p = body.beginParse()        
-        let op : number  = p.preloadUint(32)
-
-        if (op == ContractOpcodes.JETTON_TRANSFER)
-        {          
-            result.push({ name:`op`                    , value: `${p.loadUint(32)  }`, type:`Uint(32),op`})  
-            result.push({ name:`query_id`              , value: `${p.loadUint(64) }` , type:`Uint(64) ` })              
-            result.push({ name:`jetton_amount`         , value: `${p.loadCoins()  }` , type:`Coins()  ` })             
-            result.push({ name:`to_owner_address`      , value: `${p.loadAddress()}` , type:`Address()` })                
-            result.push({ name:`response_address`      , value: `${p.loadAddress()}` , type:`Address()` })                
-
-            let customPayload = p.loadMaybeRef()
-            if (customPayload) {
-                result.push({ name:`custom_payload`    , value: customPayload.toBoc().toString('hex') , type:`Cell()` })
-            } else {
-                result.push({ name:`custom_payload`    , value: `none` , type:`Cell()` })
-            }
-            result.push({ name:`forward_ton`           , value: `${p.loadCoins()}` , type:`Coins()` })                
-            let forwardPayload = p.loadMaybeRef()
-            if (forwardPayload) {
-                result.push({ name:`forward_payload`   , value: forwardPayload.toBoc().toString('hex') , type:`Cell(), Payload` })
-            } else {
-                result.push({ name:`forward_payload`   , value: `none` , type:`Cell()` })
-            }
-            
-
-            //result.push({ name:`custom_payload`        , value: `${p.loadCe() }`     , type:`` })            
-
-            //result.push({ name:`forward_ton_amount`    , value: `${p.loadCoins()}`    , type:`` })             
-            //result.push({ name:`either_forward_payload`, value: `?`                 , type:`` })
-        }
-
-        if (op == ContractOpcodes.JETTON_INTERNAL_TRANSFER)
-        {     
-            result.push({ name:`op`                , value: `${p.loadUint(32) }`, type:`Uint(32) op`})  
-            result.push({ name:`query_id`          , value: `${p.loadUint(64) }`, type:`Uint(64)` })              
-            result.push({ name:`jetton_amount`     , value: `${p.loadCoins()  }`, type:`Coins()` })             
-            result.push({ name:`from_address`      , value: `${p.loadAddress()}`, type:`Address()` })                
-            result.push({ name:`response_address`  , value: `${p.loadAddress()}`, type:`Address()` })        
-            result.push({ name:`forward_ton_amount`, value: `${p.loadCoins()  }`, type:`Coins(),TON` }) 
-            
-            let forwardPayload = p.loadMaybeRef()
-            if (forwardPayload) {
-                result.push({ name:`forward_payload`   , value: forwardPayload.toBoc().toString('hex') , type:`Cell(), Payload` })
-            } else {
-                result.push({ name:`forward_payload`   , value: `none` , type:`Cell()` })
-            }
-        }
-      
-        if (op == ContractOpcodes.JETTON_TRANSFER_NOTIFICATION)
-        {     
-
-         
-        }
+            acceptor : (visitor: StructureVisitor) => {
+                visitor.visitField({ name:`op`,               type:`Uint`,    size:32,   meta:"op", comment: ""})    
+                visitor.visitField({ name:`query_id`,         type:`Uint`,    size:64,   meta:"",   comment: "queryid as of the TON documentation"}) 
+                visitor.visitField({ name:`jetton_amount`,    type:`Coins`,   size:124,  meta:"",   comment: "Amount of coins sent to the router"}) 
+                visitor.visitField({ name:`to_owner_address`, type:`Address`, size:267,  meta:"",   comment: "User that originated the transfer"})
+                visitor.visitField({ name:`response_address`, type:`Address`, size:267,  meta:"",   comment: "User that waits for the response"}) 
+                visitor.visitField({ name:`custom_payload`,   type:`Cell`,    size:0,    meta:"Maybe, Payload",comment: "Payload for processing by jetton itself"}) 
+                visitor.visitField({ name:`forward_ton`,      type:`Coins`,   size:124,  meta:"",   comment: "Amount of to attach to forward payload"})
+                visitor.visitField({ name:`forward_payload`,  type:`Cell`,    size:0,    meta:"Either,Maybe,Payload",comment: "Payload for processing"}) 
+            } 
+        },
+        {
+            opcode : ContractOpcodes.JETTON_INTERNAL_TRANSFER,
+            description : "Jetton transfer message between wallets",
+    
+            acceptor : (visitor: StructureVisitor) => {
+                visitor.visitField({ name:`op`,               type:`Uint`,    size:32,   meta:"op", comment: ""})    
+                visitor.visitField({ name:`query_id`,         type:`Uint`,    size:64,   meta:"",   comment: "queryid as of the TON documentation"}) 
+                visitor.visitField({ name:`jetton_amount`,    type:`Coins`,   size:124,  meta:"",   comment: "Amount of coins sent to the router"}) 
+                visitor.visitField({ name:`from_address`,     type:`Address`, size:267,  meta:"",   comment: "User that originated the transfer"})
+                visitor.visitField({ name:`response_address`, type:`Address`, size:267,  meta:"",   comment: "User that waits for the response"})                
+                visitor.visitField({ name:`forward_ton`,      type:`Coins`,   size:124,  meta:"",   comment: "Amount of to attach to forward payload"})
+                visitor.visitField({ name:`forward_payload`,  type:`Cell`,    size:0,    meta:"Either,Maybe,Payload",comment: "Payload for processing"}) 
+            } 
+        },
 
 
-        return result
-    } 
+    ]
+       
 
 }

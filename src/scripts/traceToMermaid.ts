@@ -1,4 +1,4 @@
-import { Cell, fromNano, Transaction } from "@ton/core"
+import { Cell, fromNano, Slice, Transaction } from "@ton/core"
 import { ContractOpcodes, ErrorsLookup, OpcodesLookup } from "../wrappers/opCodes"
 import { FEE_DENOMINATOR, getApproxFloatPrice, MaxUint128, TickMath } from "../wrappers/frontmath/frontMath"
 
@@ -13,7 +13,14 @@ import { PTonWalletV2 } from "../wrappers/3rd_party/PTonWalletV2";
 import { PoolFactoryContract } from "../wrappers/PoolFactoryContract";
 import { JettonMinter } from "../wrappers/common/JettonMinter";
 
-function printParsedInput(obj : any , body: Cell) : ContractMessageMeta[] {
+
+type DecodedMessage = {
+    decoded : ContractMessageMeta[]
+    remainder : Slice
+}
+
+
+function printParsedInput(obj : any , body: Cell) : DecodedMessage {
 
     let result : ContractMessageMeta[] = []
     let p = body.beginParse()
@@ -23,57 +30,46 @@ function printParsedInput(obj : any , body: Cell) : ContractMessageMeta[] {
         if (op == meta.opcode) {
             console.log(`Processing ${OpcodesLookup[op]}`)
             let visitor = new ParseDataVisitor
-            visitor.visitCell(body, meta.acceptor)
-            result = [...result, ...visitor.result]
+            let remainder = visitor.visitCell(body, meta.acceptor)
+            return { decoded: visitor.result, remainder} 
         }
     }
-    return result;
+    return { decoded: result, remainder: p };
 }
 
 
 
 export class UniversalParser
 {
-    static printParsedInput(body: Cell) : ContractMessageMeta[] {
-        let result : ContractMessageMeta[] = []
-
-        let objects = [RouterV3Contract, PoolV3Contract, PositionNFTV3Contract, AccountV3Contract, PoolFactoryContract]
+    static printParsedInput(body: Cell) : DecodedMessage
+    {     
+        let objects = [RouterV3Contract, PoolV3Contract, PositionNFTV3Contract, AccountV3Contract, PoolFactoryContract, JettonWallet, JettonMinter, PTonWalletV2]
         for (let obj of objects) {
             if ("metaDescription" in obj) {
-                //console.log(`${obj} has a field with metaDescription`)
-                
                 try {
-                    result = printParsedInput(obj, body)
-                    if (result.length != 0)
+                    const result = printParsedInput(obj, body)
+                    if (result.decoded.length != 0)
                         return result    
                 } catch {}
             }
-        }
-        try {        
-            result = JettonWallet.printParsedInput(body)
-            if (result.length != 0)
-                return result    
-        } catch {}
-        try {        
-            result = JettonMinter.printParsedInput(body)
-            if (result.length != 0)
-                return result    
-        } catch {}
-        try {        
-            result = PTonWalletV2.printParsedInput(body)
-            if (result.length != 0)
-                return result    
-        } catch {}
+        }      
         try {        
             let p = body.beginParse()        
             let op : number  = p.preloadUint(32)
             if (op == 0xffffffff) {
-                return [
-                    { name:`op` , value: `${p.loadUint(32) }`, type:`Uint(32) op`}
-                ]
+                op = p.loadUint(32)
+                return { 
+                    decoded : [
+                      { name:`op` , value: `${p.loadUint(32) }`, type:`Uint(32) op`}
+                    ],
+                    remainder : p
+                }
             }
         } catch {}
-        return result
+        return { 
+            decoded : [],
+            remainder : body.beginParse()
+        }
     }
 }
 
@@ -99,24 +95,27 @@ export function printWalletParsedInput(body: Cell) : {name: string, value: strin
 
 export type ContractDictionary =  { [x : string] : {name: string, parser?:any} }
 
-type MessageDecodedType = {name: string, value: string, type:string }[]
 
-function decodedToString(addrD: string, messageDecoded :MessageDecodedType, contractDict: ContractDictionary) {
-    const operations: {[key: number ]: string} = OpcodesLookup
-
+function decodedToString(addrD: string, messageDecoded :DecodedMessage, contractDict: ContractDictionary) {
     let message = "";
 
     let op    = ""        
     let payloadTo = ""
 
-    for (let field in messageDecoded)
+    const emptyCellHex = Cell.EMPTY.toBoc().toString("hex")
+
+    let decodedMessageFields = messageDecoded.decoded
+    for (let field in decodedMessageFields)
     {
-        let value = messageDecoded[field].value
+        let value = decodedMessageFields[field].value
+        console.log(`Processing ${field} ${decodedMessageFields[field].name}:`)
+        console.log(`   ${value}`)
 
 
-        if (messageDecoded[field].type.endsWith("op") )
+
+        if (decodedMessageFields[field].type.endsWith("op") )
         {
-            let opText = operations[Number(value)]
+            let opText = OpcodesLookup[Number(value)]
             op = value
             opText = opText.split(",")[0]
             value = "<b>" + opText + "</b> " + "0x" + Number(value).toString(16)
@@ -125,16 +124,16 @@ function decodedToString(addrD: string, messageDecoded :MessageDecodedType, cont
         }           
 
         /* Process other types */        
-        if (messageDecoded[field].type.startsWith("Address") && value in contractDict ) {
+        if (decodedMessageFields[field].type.startsWith("Address") && value in contractDict ) {
             value = contractDict[value].name
         }                   
 
-        if (messageDecoded[field].name == "exit_code" )
+        if (decodedMessageFields[field].name == "exit_code" )
         {
             value += "&nbsp;<b>" + ErrorsLookup[Number(value)] + "</b>"
         }
 
-        if (messageDecoded[field].type.includes("PriceX96") )
+        if (decodedMessageFields[field].type.includes("PriceX96") )
         {
             if (BigInt(value) == TickMath.MAX_SQRT_RATIO     )      value = "MAX_SQRT_RATIO"
             else if (BigInt(value) == TickMath.MAX_SQRT_RATIO - 1n) value = "MAX_SQRT_RATIO - 1"
@@ -147,9 +146,9 @@ function decodedToString(addrD: string, messageDecoded :MessageDecodedType, cont
 
         /* Guess payload target */
         if (Number(op) == ContractOpcodes.JETTON_TRANSFER)  {
-            if (messageDecoded[field].name === "to_owner_address") {                        
-                payloadTo = messageDecoded[field].value
-                console.log("Cell found payload to ", messageDecoded[field])
+            if (decodedMessageFields[field].name === "to_owner_address") {                        
+                payloadTo = decodedMessageFields[field].value
+                console.log("Cell found payload to ", decodedMessageFields[field])
                 console.log("Target JETTON_TRANSFER: ", payloadTo)
             }
         } 
@@ -157,53 +156,53 @@ function decodedToString(addrD: string, messageDecoded :MessageDecodedType, cont
         if (Number(op) == ContractOpcodes.JETTON_TRANSFER_NOTIFICATION)  {
             payloadTo = addrD
             console.log("Target JETTON_TRANSFER_NOTIFICATION", payloadTo,  contractDict[payloadTo].name)
-            console.log(`Processing ${messageDecoded[field].type}`)
+            console.log(`Processing ${decodedMessageFields[field].type}`)
 
         }      
 
         
-        if (messageDecoded[field].type.startsWith("Cell") && messageDecoded[field].type.includes("Payload")) {
-            if (payloadTo != "") {
+        if (decodedMessageFields[field].type.startsWith("Cell") && decodedMessageFields[field].type.includes("Payload")) {
+
+            if (value == emptyCellHex) {
+                value = "Cell.EMPTY"
+            } else if (value == "" || value == "none" ) {
+                value = "null"
+            } else if (payloadTo != "") {
                 const target = contractDict[payloadTo]
                 console.log("target", target)
 
-                let hex = messageDecoded[field].value;
-                console.log("hex", hex)    
-                if (hex != "none") {
+                let hex = decodedMessageFields[field].value;
+                console.log("hex", hex)
+                if (hex != "" && hex != "none") {
                     const boc = Cell.fromBoc(Buffer.from(hex, "hex"))  
                     const payload = target.parser(boc[0])
                     console.log(payload)
-                    value = "to " + target.name + "\n&nbsp; " + decodedToString(payloadTo, payload, contractDict).replace(/\n/g, "\n&nbsp; ")
+                    value = "to " + target.name + "\n&nbsp;&nbsp;&nbsp;&nbsp; " + decodedToString(payloadTo, payload, contractDict).replace(/\n/g, "\n&nbsp;&nbsp;&nbsp;&nbsp;")
                 }        
-            } else {  
-                const emptyCellHex = Cell.EMPTY.toBoc().toString("hex")
-                if (value == emptyCellHex) {
-                    value = "Cell.EMPTY"
-                } else {
-                    value = value.substring(0, 16) + (value.length > 16 ? "..." : "");
-                }
+            } else {                  
+                value = value.substring(0, 16) + (value.length > 16 ? "..." : "");
             }
         }
 
-        if (messageDecoded[field].type.startsWith("Cell") && messageDecoded[field].type.includes("Metadata")) {
+        if (decodedMessageFields[field].type.startsWith("Cell") && decodedMessageFields[field].type.includes("Metadata")) {
             value = value.substring(0, 16) + (value.length > 16 ? "..." : "");
         }
 
 
-        if (messageDecoded[field].type.includes("Uint(128)")) {            
+        if (decodedMessageFields[field].type.includes("Uint(128)")) {            
             if (BigInt(value) == MaxUint128) {
                 value = "<i>2^128 - 1</i>" 
             }
         }
-        if (messageDecoded[field].type.includes("Indexer")) {
+        if (decodedMessageFields[field].type.includes("Indexer")) {
             value = value + " <i><b>Indexer Only</b></i>"
         }
 
-        if (messageDecoded[field].type.includes("Bool")) {
+        if (decodedMessageFields[field].type.includes("Bool")) {
             value = Number(value) == 0 ? "false" : "true"
         }
 
-        if (messageDecoded[field].type.includes("Fee")) {
+        if (decodedMessageFields[field].type.includes("Fee")) {
             let val = Number(value)
             if (val > FEE_DENOMINATOR) {
                 value = value + " <i>Leave default</i>" 
@@ -215,8 +214,19 @@ function decodedToString(addrD: string, messageDecoded :MessageDecodedType, cont
         /*if (messageDecoded[field].type.startsWith("Coins()")) {
             value = fromNano(value)
         }*/        
-        message += `${messageDecoded[field].name}: ${value}\n`
+        message += `${decodedMessageFields[field].name}: ${value}\n`
     }
+    if (messageDecoded.remainder) {
+        if (messageDecoded.remainder.remainingBits != 0 || messageDecoded.remainder.remainingRefs != 0)
+        {
+            message += `Trailing data: bits=${messageDecoded.remainder.remainingBits} refs=${messageDecoded.remainder.remainingRefs}\n`
+        }
+    } else {
+            message += "Remainder unknown\n"
+    }
+
+    message += `<span><button id="copy">Copy Raw Body</button></span>\n`
+
     return message
 
 }

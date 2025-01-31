@@ -14,10 +14,10 @@ export class ParseDataVisitor implements StructureVisitor {
         return this.slices[this.slices.length - 1]
     }
 
-    visitCell(cell : Cell, acceptor: any) {
+    visitCell(cell : Cell, acceptor: any) : Slice {
         this.slices.push(cell.beginParse())
         acceptor(this)
-        this.slices.pop()
+        return this.slices.pop()
     }
 
     visitField(field: MetaMessageField): void {

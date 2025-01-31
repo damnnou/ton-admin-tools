@@ -13,6 +13,8 @@ const config = {
         pools        : './src/tools/pools/pools.ts',        
         nft          : './src/tools/nft/nft.ts',
         account      : './src/tools/account/account.ts',
+
+        jetton       : './src/tools/jetton/jetton.ts',
         
         transaction: './src/tools/transaction/transaction.ts',       
     },
@@ -33,6 +35,11 @@ const config = {
             filename: 'pool_factory.html',
             template: './src/tools/pool_factory/pool_factory.html',
             chunks: ['pool_factory'], 
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'jetton.html',
+            template: './src/tools/jetton/jetton.html',
+            chunks: ['jetton'], 
         }),
         new HtmlWebpackPlugin({
             filename: 'router.html',
