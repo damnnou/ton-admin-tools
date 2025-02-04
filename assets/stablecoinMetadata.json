@@ -1,0 +1,6 @@
+{ 
+    "symbol": "StableCoin",
+    "name": "Real USDT Coin contract",
+    "description": "This coin is a USDT contract redeployed to testnet",    
+    "image" :"https://upload.wikimedia.org/wikipedia/commons/a/af/Dollar-dynamic-color.png"
+}
