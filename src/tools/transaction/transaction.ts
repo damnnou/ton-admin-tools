@@ -58,11 +58,13 @@ async function fillDictFromIndexer(testnet : boolean, contractDict : ContractDic
         console.log(apolloJettonList)
 
         for (let jettonData of apolloJettonList) {
+            let name = "Pool_" + jettonData.name.replace("-", "_").replace("₮","T").replace("’","_")
+
             const minterAddress = Address.parse(jettonData.address).toString()
-            contractDict[minterAddress] = {name: `Minter_${jettonData.name}`, parser: (x: Cell) => UniversalParser.printParsedInput(x)}
+            contractDict[minterAddress] = {name: `Minter_${name}`, parser: (x: Cell) => UniversalParser.printParsedInput(x)}
 
             const walletAddress = Address.parse(jettonData.wallet).toString()
-            contractDict[walletAddress] = {name: `RWallet_${jettonData.name}`, parser: (x: Cell) => UniversalParser.printParsedInput(x)}
+            contractDict[walletAddress] = {name: `RWallet_${name}`, parser: (x: Cell) => UniversalParser.printParsedInput(x)}
         }
 }
 
@@ -159,7 +161,7 @@ downloadElement.addEventListener("click", async () => {
                 jettons[poolData.jetton0.address] = {name: poolData.jetton0.symbol, address: poolData.jetton0.address, decimals:poolData.jetton0.decimals, walletBalance: 0n, poolsBalance: 0n}
                 jettons[poolData.jetton1.address] = {name: poolData.jetton1.symbol, address: poolData.jetton1.address, decimals:poolData.jetton1.decimals, walletBalance: 0n, poolsBalance: 0n}            
 
-                let name = "Pool_" + poolData.name.replace("-", "_").replace("₮","T")
+                let name = "Pool_" + poolData.name.replace("-", "_").replace("₮","T").replace("’","_")
                 
                 contractDict[Address.parse(poolData.address).toString()] = { name: name, parser: (x: Cell) => UniversalParser.printParsedInput(x) }  
                 //contractDict[poolData.jetton0.address] = {name: poolData.jetton0.symbol}
@@ -175,7 +177,7 @@ downloadElement.addEventListener("click", async () => {
                     let walletJAddress = await jettonApi.getWalletAddress(Address.parse("EQBxIE-Z9UhJI50Gew7cDAVRMwTy98zEsd08cbrLHwuvU1Is"))
                     let routerJAddress = await jettonApi.getWalletAddress(Address.parse("EQDnfag9lHlc0rS6YeI7WwRq-3ltcKSsYxLiXmveB7gNUzNO"))
 
-                    let name = jettons[jetton].name.replace("-", "_").replace("₮","T")
+                    let name = jettons[jetton].name.replace("-", "_").replace("₮","T").replace("’","_")
                     contractDict[walletJAddress.toString()] = { name: `wallet_jetton_for_` + name, parser: (x: Cell) => UniversalParser.printParsedInput(x) }  
                     contractDict[routerJAddress.toString()] = { name: `router_jetton_for_` + name, parser: (x: Cell) => UniversalParser.printParsedInput(x) }  
                 }
