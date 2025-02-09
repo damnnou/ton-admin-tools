@@ -238,7 +238,8 @@ export function traceToMermaid(transactions : Transaction[], contractDict : Cont
     lines.push(`title: ${name}`)
     lines.push("---")
     lines.push("flowchart TD")
-    lines.push("classDef decodedNode text-align:left,white-space:nowrap;")
+    lines.push("classDef decodedMessage text-align:left,white-space:nowrap;")
+    lines.push("classDef decodedNode    text-align:left,white-space:nowrap,rx:10px,ry:10px;")
     
     /* I will  identify all messages by src and creation time. */
     let messages: {[lt: string] : {raw: any, processed:string}} = {}
@@ -295,8 +296,21 @@ export function traceToMermaid(transactions : Transaction[], contractDict : Cont
             } else {
                 destText = txNodeName.substring(0, 6)+ "___" +  txNodeName.substring(txNodeName.length - 6, txNodeName.length)            
             }
-
             txNodeName = destText.replace(/ /g, "_") + "_" + index 
+
+            if ((tx.description.type == "generic") && (tx.description.computePhase.type == "vm") ) {
+                destText += "\n"
+               
+                let computePhase = tx.description.computePhase
+                let error = (computePhase.exitCode in ErrorsLookup) ? "<b>" + ErrorsLookup[computePhase.exitCode] + "</b>" : computePhase.exitCode
+
+                destText += "Success:" + computePhase.success + "\n"
+                destText += "Gas Fee:" + computePhase.gasFees + "\n"
+                destText += "Gas Used:" + computePhase.gasUsed + "\n"             
+                destText += "Vm Steps:" + computePhase.vmSteps + "\n"
+                destText += "Exit Code:" + error + "\n"
+            }
+
             //txNodeName = "Test"
         }
 
@@ -332,6 +346,8 @@ export function traceToMermaid(transactions : Transaction[], contractDict : Cont
         
         let inId = src + "_" + inLt
         lines.push(`LT${inId} --> |${valueIn ? fromNano(valueIn) : "?"} ton| ${txNodeName}([${destText}]) `)
+        lines.push(`class ${txNodeName} decodedNode;`)
+
 
         for (let m  in tx.outMessages.keys()){
             let outMessage = tx.outMessages.get(Number(m));
@@ -351,9 +367,10 @@ export function traceToMermaid(transactions : Transaction[], contractDict : Cont
 
     for (let lt in messages)
     {
-        lines.push(`class LT${lt} decodedNode;`)
+        lines.push(`class LT${lt} decodedMessage;`)
         lines.push(`LT${lt}[${messages[lt].processed}]`)
     } 
+
     
     return lines.join("\n")
 }
