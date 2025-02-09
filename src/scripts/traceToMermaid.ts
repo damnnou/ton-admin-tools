@@ -1,4 +1,4 @@
-import { Cell, fromNano, Slice, Transaction } from "@ton/core"
+import { Address, Cell, fromNano, Slice, Transaction } from "@ton/core"
 import { ContractOpcodes, ErrorsLookup, OpcodesLookup } from "../wrappers/opCodes"
 import { FEE_DENOMINATOR, getApproxFloatPrice, MaxUint128, TickMath } from "../wrappers/frontmath/frontMath"
 
@@ -19,6 +19,11 @@ type DecodedMessage = {
     remainder : Slice
 }
 
+
+export type TransactionEx = Transaction & {
+    block : string
+
+}
 
 function printParsedInput(obj : any , body: Cell) : DecodedMessage {
 
@@ -232,7 +237,7 @@ function decodedToString(addrD: string, messageDecoded :DecodedMessage, contract
 }
 
 
-export function traceToMermaid(transactions : Transaction[], contractDict : ContractDictionary) : string {
+export function traceToMermaid(transactions : TransactionEx[], contractDict : ContractDictionary) : string {
     let lines = []
     lines.push("---")
     lines.push(`title: ${name}`)
@@ -304,11 +309,41 @@ export function traceToMermaid(transactions : Transaction[], contractDict : Cont
                 let computePhase = tx.description.computePhase
                 let error = (computePhase.exitCode in ErrorsLookup) ? "<b>" + ErrorsLookup[computePhase.exitCode] + "</b>" : computePhase.exitCode
 
-                destText += "Success:" + computePhase.success + "\n"
-                destText += "Gas Fee:" + computePhase.gasFees + "\n"
-                destText += "Gas Used:" + computePhase.gasUsed + "\n"             
-                destText += "Vm Steps:" + computePhase.vmSteps + "\n"
-                destText += "Exit Code:" + error + "\n"
+                let strShard = tx.block.split(",")[1]
+                let hexShard : bigint = BigInt("0x" + strShard)
+                let binShard = hexShard.toString(2) + "b"
+
+                let strAccout = (tx.inMessage.info.dest as Address).hash.toString("hex").slice(0, 16)
+                let hexAccout : bigint = BigInt("0x" + strAccout)
+                let binAccout = hexAccout.toString(2) + "b"
+                
+                let i = 0n
+                for (; i < 64n; i++) {
+                    if ((hexShard & (1n << i )) != 0n) {
+                        break
+                    }
+                }
+                let mask64 =  0xFFFFFFFFFFFFFFFFn; 
+                let mask : bigint = (mask64 << (i + 1n)) & mask64;
+                let shardOk = ((hexAccout ^ hexShard) & mask) == 0n
+
+                let accShard = BigInt("0x" + (tx.inMessage.info.dest as Address).hash.toString("hex").slice(0, 16)) .toString(2) + "b"
+
+                // https://tonviewer.com/block/(-1:8000000000000000:39991696)  
+                // https://tonviewer.com/transaction/39229a9f8d0a3c5975e72059f9da02f5aae56abf4fb8731e5922482467976711
+
+                destText += "Block: " + tx.block + "\n"
+                destText += "B Shard: " + binShard + "\n"
+                destText += "A Shard: " + binAccout + "\n"
+                destText += "Shard Mask: " + mask.toString(2) + "b (" + i + ")\n"
+
+                destText += "Shard Ok: " + shardOk + "\n"
+
+                destText += "Success: " + computePhase.success + "\n"
+                destText += "Gas Fee: " + computePhase.gasFees + "\n"
+                destText += "Gas Used: " + computePhase.gasUsed + "\n"             
+                destText += "Vm Steps: " + computePhase.vmSteps + "\n"
+                destText += "Exit Code: " + error + "\n"
             }
 
             //txNodeName = "Test"
@@ -345,7 +380,7 @@ export function traceToMermaid(transactions : Transaction[], contractDict : Cont
         }
         
         let inId = src + "_" + inLt
-        lines.push(`LT${inId} --> |${valueIn ? fromNano(valueIn) : "?"} ton| ${txNodeName}([${destText}]) `)
+        lines.push(`LT${inId} --> |${valueIn ? fromNano(valueIn) : "?"} ton| ${txNodeName}(["${destText}"]) `)
         lines.push(`class ${txNodeName} decodedNode;`)
 
 

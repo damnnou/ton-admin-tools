@@ -3,6 +3,7 @@ import { Transaction as TonApiTransaction } from "tonapi-sdk-js"
 import { Trace } from "tonapi-sdk-js"
 import { Message as TAMessage } from "tonapi-sdk-js";
 import { BLACK_HOLE_ADDRESS } from "../wrappers/tonUtils";
+import { TransactionEx } from "./traceToMermaid";
 
 export function toMessage(msg : TAMessage) : Message {
     return {
@@ -26,8 +27,7 @@ export function toMessage(msg : TAMessage) : Message {
 }
 
 
-
-export function flattenTrace(t: Trace ) : Transaction[] 
+export function flattenTrace(t: Trace ) : TransactionEx[] 
 {
     const tr : TonApiTransaction = t.transaction
 
@@ -39,7 +39,9 @@ export function flattenTrace(t: Trace ) : Transaction[]
     }
     console.log("out Messages :", outMessages.size)
 
-    const thisTr : Transaction = {
+    const thisTr : TransactionEx = {
+            block : tr.block,
+
             address: BigInt("0x" + tr.hash),
             lt: BigInt(tr.lt),
             prevTransactionHash: BigInt("0x" + (tr.prev_trans_hash ?? "0")),
@@ -66,8 +68,8 @@ export function flattenTrace(t: Trace ) : Transaction[]
                     success: tr.compute_phase.success,
                     messageStateUsed: true,
                     accountActivated: true,
-                    gasFees: BigInt(tr.compute_phase!.gas_fees) ?? 0n,
-                    gasUsed: BigInt(tr.compute_phase!.gas_used) ?? 0n,
+                    gasFees: BigInt(tr.compute_phase!.gas_fees ?? 0n),
+                    gasUsed: BigInt(tr.compute_phase!.gas_used ?? 0n),
                     gasLimit: 0n,
                     gasCredit: undefined,
 
@@ -83,7 +85,7 @@ export function flattenTrace(t: Trace ) : Transaction[]
             hash: () => Buffer.from("0", "hex")          
         }
     
-    let childTr : Transaction[] = []
+    let childTr : TransactionEx[] = []
 
     if (t.children) {
         console.log (`Processing ${t.children.length} subchilds`)

@@ -1,7 +1,7 @@
 import { Address, Cell, Contract, Transaction } from "@ton/core";
 import { Api, HttpClient, Trace } from "tonapi-sdk-js";
 import { flattenTrace } from "../../scripts/tonapiTotoncore";
-import { ContractDictionary, traceToMermaid, UniversalParser } from "../../scripts/traceToMermaid";
+import { ContractDictionary, traceToMermaid, TransactionEx, UniversalParser } from "../../scripts/traceToMermaid";
 import mermaid from 'mermaid';
 import { loadSharedParts } from "../common/common";
 import { ApolloClient, InMemoryCache, gql } from "@apollo/client/core";
@@ -109,7 +109,7 @@ downloadElement.addEventListener("click", async () => {
             return
         }
     
-        const flatTrace : Transaction[] = flattenTrace(trace)
+        const flatTrace : TransactionEx[] = flattenTrace(trace)
         console.log(` Trace has ${flatTrace.length} transactions`)
 
         let contractDict: ContractDictionary = {
