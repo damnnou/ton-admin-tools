@@ -236,6 +236,10 @@ function decodedToString(addrD: string, messageDecoded :DecodedMessage, contract
 
 }
 
+function escapeNodeId(s: string) : string {
+    return s.replace(/-/g,"_")
+}
+
 
 export function traceToMermaid(transactions : TransactionEx[], contractDict : ContractDictionary) : string {
     let lines = []
@@ -273,7 +277,7 @@ export function traceToMermaid(transactions : TransactionEx[], contractDict : Co
             }
 
 
-            messages[tx.inMessage.info.src + "_" + lt.toString()] = {raw: tx.inMessage.info, processed:message1}
+            messages[escapeNodeId(tx.inMessage.info.src.toString()) + "_" + lt.toString()] = {raw: tx.inMessage.info, processed:message1}
         }
         if (tx.inMessage && tx.inMessage.info.type === 'external-in') {
             const lt = "external"
@@ -281,7 +285,7 @@ export function traceToMermaid(transactions : TransactionEx[], contractDict : Co
             if (tx.inMessage.info.src)
                 src = tx.inMessage.info.src.toString()
 
-            messages[src + "_" + lt.toString()] = {raw: tx.inMessage.info, processed:"external"}
+            messages[escapeNodeId(src) + "_" + lt.toString()] = {raw: tx.inMessage.info, processed:"external"}
             console.log(tx.inMessage.info)
         }
     }
@@ -293,15 +297,17 @@ export function traceToMermaid(transactions : TransactionEx[], contractDict : Co
             continue;
         }
         let destText = "N/A"
-        let txNodeName = tx.inMessage.info.dest?.toString()
-        if (txNodeName !== undefined) {
+        let txRawAddress = tx.inMessage.info.dest?.toString()
+        let txNodeName = escapeNodeId(txRawAddress)
+        console.log(txNodeName)
+        if (txRawAddress !== undefined) {
 
-            if (txNodeName in contractDict) {
-                destText = contractDict[txNodeName].name
+            if (txRawAddress in contractDict) {
+                destText = escapeNodeId(contractDict[txRawAddress].name)
             } else {
                 destText = txNodeName.substring(0, 6)+ "___" +  txNodeName.substring(txNodeName.length - 6, txNodeName.length)            
             }
-            txNodeName = destText.replace(/ /g, "_") + "_" + index 
+            txNodeName = txNodeName + "_" + index 
 
             if ((tx.description.type == "generic") && (tx.description.computePhase.type == "vm") ) {
                 destText += "\n"
@@ -373,13 +379,13 @@ export function traceToMermaid(transactions : TransactionEx[], contractDict : Co
         let addrS = tx.inMessage.info.src?.toString()
         if (addrS !== undefined) {
             if (addrS in contractDict) {
-                sourceText = contractDict[addrS].name
+                sourceText = escapeNodeId(contractDict[addrS].name)
             } else {
                 sourceText = addrS.substring(0, 6)+ "..." +  addrS.substring(addrS.length - 6, addrS.length)            
             }
         }
         
-        let inId = src + "_" + inLt
+        let inId = escapeNodeId(src) + "_" + inLt
         lines.push(`LT${inId} --> |${valueIn ? fromNano(valueIn) : "?"} ton| ${txNodeName}(["${destText}"]) `)
         lines.push(`class ${txNodeName} decodedNode;`)
 
@@ -391,7 +397,7 @@ export function traceToMermaid(transactions : TransactionEx[], contractDict : Co
                 outLt    = outMessage.info.createdLt
             }
 
-            let outId = outMessage!.info.src!.toString() + "_" + outLt
+            let outId = escapeNodeId(outMessage!.info.src!.toString()) + "_" + outLt
             lines.push(`${txNodeName} --> LT${outId}`)
         }
 
