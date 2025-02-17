@@ -15,8 +15,10 @@ const config = {
         account      : './src/tools/account/account.ts',
 
         jetton       : './src/tools/jetton/jetton.ts',
+
+        stats        : './src/tools/stats/stats.ts',
         
-        transaction: './src/tools/transaction/transaction.ts',       
+        transaction  : './src/tools/transaction/transaction.ts',       
     },
     output: {
         path: path.resolve(__dirname, 'public'),
@@ -60,6 +62,11 @@ const config = {
             filename: 'account.html',
             template: './src/tools/account/account.html',
             chunks: ['account'], 
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'stats.html',
+            template: './src/tools/stats/stats.html',
+            chunks: ['stats'], 
         }),
         new HtmlWebpackPlugin({
             filename: 'transaction.html',

@@ -48,7 +48,7 @@ export class UniversalParser
 {
     static printParsedInput(body: Cell) : DecodedMessage
     {     
-        let objects = [RouterV3Contract, PoolV3Contract, PositionNFTV3Contract, AccountV3Contract, PoolFactoryContract, JettonWallet, JettonMinter, PTonWalletV2]
+        let objects = [PoolV3Contract, RouterV3Contract, PositionNFTV3Contract, AccountV3Contract, PoolFactoryContract, JettonWallet, JettonMinter, PTonWalletV2]
         for (let obj of objects) {
             if ("metaDescription" in obj) {
                 try {

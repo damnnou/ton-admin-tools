@@ -16,10 +16,11 @@ export function loadSharedParts() {
         <ul class="horizontal-menu">
                 <li><a href="router.html"> Router </a></li>
                 <li><a href="pool_factory.html"> Pool Factory </a></li>
-                <li><a href="pools.html">   Pool </a></li>
-                <li><a href="nft.html">   Position NFT </a></li>
-                <li><a href="account.html">   User Account</a></li>
+                <li><a href="pools.html"> Pool </a></li>
+                <li><a href="nft.html"> Position NFT </a></li>
+                <li><a href="account.html"> User Account</a></li>
                 <li><a href="jetton.html"> Jetton </a></li>
+                <li><a href="stats.html"> Stats </a></li>
                 <li><a href="transaction.html"> Transaction </a></li>
 
         </ul>
